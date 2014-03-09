@@ -274,7 +274,7 @@ class CLossFactory
                   throw CBMRMException("unable to cast data into CGenericData",
                                        "CLossFactory::GetLoss()");
                }
-	       int dim = genericdata->dim();
+               int dim = genericdata->dim();
 
                loss = new CGenericLoss(dim, model, genericdata);
             } 

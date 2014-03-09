@@ -62,8 +62,9 @@ public:
 
   map<int, int> nodeLabels; // training labels of each node
 
-  map<int, double*> nodeFeatures;
-  map<int, double*> edgeFeatures;
+  // nodeFeatures + edgeFeatures为最终的输入feature
+  map<int, double*> nodeFeatures; // 节点本身的feature
+  map<int, double*> edgeFeatures; // 节点间的pairwise feature
   
   map<int, double>* firstOrderResponses;
 

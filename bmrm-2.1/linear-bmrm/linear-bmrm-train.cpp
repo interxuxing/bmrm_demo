@@ -95,17 +95,17 @@ int main(int argc, char** argv)
 #ifdef PARALLEL_BMRM
       data = CDataFactory::GetData(myProcID,nProc);
 #else
-      data = CDataFactory::GetData();
+      data = CDataFactory::GetData(); // 这里初始化了作者自定义的genericdata这个实例
 #endif
-
+      // 这里初始化了作者自己定义的genericloss这个实例
       loss = CLossFactory::GetLoss(model, data); // loss will initialize model if model is not hot-started
 
       vector<double> lambdas;
-      if(config.IsSet("BMRM.lambdas"))
+      if(config.IsSet("BMRM.lambdas")) // 这个配置选项是同时处理多个lambda参数， 用于lambda选择. 但是本例中conf文件没有配置这个选项
       {
          lambdas = config.GetDoubleVector("BMRM.lambdas");
          cout << "Main(): Multiple lambda parameters detected! Training with each of them..." << endl;
-         
+         // 每次从lambdas中选取一个lambda， 来训练一个模型， 用到了solver类的实例
          for(size_t i=0; i < lambdas.size(); i++)
          {
             config.SetDouble("BMRM.lambda", lambdas[i]);
@@ -120,7 +120,7 @@ int main(int argc, char** argv)
             solver->Train();		
 #ifndef PARALLEL_BMRM
             // in parallel computation, master holds only a subset of whole dataset
-            // so evaluation of training will be bogus
+            // so evaluation of training will be bogus(假的)
             loss->Evaluate(model);
 #endif
 #ifdef PARALLEL_BMRM

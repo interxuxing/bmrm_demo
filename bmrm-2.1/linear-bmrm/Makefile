@@ -38,10 +38,10 @@ ALL_OBJECTS = ${UTILITIES_OBJ} ${DATA_OBJ} ${MODEL_OBJ} ${LOSS_OBJ} ${SOLVER_OBJ
 CXX = g++
 
 ### for debugging ###
-#CFLAGS = -Wall -ggdb -g ${INCLUDE_DIR}
+CFLAGS = -Wall -ggdb -g ${INCLUDE_DIR}
 
 ### for release ###
-CFLAGS = -Wall -O3 -DNDEBUG ${INCLUDE_DIR}
+#CFLAGS = -Wall -O3 -DNDEBUG ${INCLUDE_DIR}
 
 LDFLAGS = 
 
@@ -79,7 +79,8 @@ endif
 
 ifeq (${MPI_AVAILABLE},1)
 	# path to mpicxx
-	CXX = /opt/mpich/gnu/bin/mpicxx
+	#CXX = /opt/mpich/gnu/bin/mpicxx
+	CXX = /usr/bin/mpicxx
 	CFLAGS += -DPARALLEL_BMRM
 	LDFLAGS += -lmpich
 	TRAINER = parallel-bmrm-train

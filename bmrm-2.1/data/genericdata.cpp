@@ -48,7 +48,7 @@ CGenericData::CGenericData()
   string edgeFile = config.GetString("Data.edgeFeaturesTrain");  // data/trainingEdgeFeaturesPASCAL.txt
   string imageFeatures = config.GetString("Data.imageFeaturesTrain"); // null
   string textFile = config.GetString("Data.textFeaturesTrain"); // data/trainingTextPASCAL.txt
-  if (config.GetBool("Prediction.outputFvalAndLabels"))  // null, 这里是用在test集合上做验证的
+  if (config.GetBool("Prediction.outputFvalAndLabels"))  // null, 这里是用在test集合上做验证的, 原始的conf文件给定的是train+test
   {
     nodeFile = config.GetString("Data.nodeFeaturesTest");
     edgeFile = config.GetString("Data.edgeFeaturesTest");
@@ -56,6 +56,7 @@ CGenericData::CGenericData()
     textFile = config.GetString("Data.textFeaturesTest");
   }
   learnLabel = config.GetInt("Data.learnLabel"); // 6043
+  printf("Now load feature datas for Label %d \n", learnLabel);
   string idFile = config.GetString("Data.idFile"); // data/trainingGroupIDsPASCAL.txt
   string textIdFile = config.GetString("Data.textIdFile"); // data/trainingWordIDsPASCAL.txt
 
@@ -77,7 +78,8 @@ CGenericData::CGenericData()
   }
   
   // Read group and tag features
-  FILE* idf = fopen(idFile.c_str(), "r"); // idFile =  data/trainingGroupIDsPASCAL.txt
+  // idFile =  data/trainingGroupIDsPASCAL.txt, 这个文件可以不用改， 因为它包含了几个dataset的group信息
+  FILE* idf = fopen(idFile.c_str(), "r");
   int currentID;
   vector<int> groupsToUse;
   vector<int> tagsToUse;
@@ -138,7 +140,8 @@ CGenericData::CGenericData()
   }
   
   // Text features
-  FILE* tidf = fopen(textIdFile.c_str(), "r"); // textIdFile = data/trainingWordIDsPASCAL.txt
+  // textIdFile = data/trainingWordIDsPASCAL.txt, 这个文件不用改， 它包含了几个dataset的word信息
+  FILE* tidf = fopen(textIdFile.c_str(), "r");
   vector<int> wordsToUse;
   map<int, int> wordsToUseMap;
   int NWords_;
@@ -180,7 +183,8 @@ CGenericData::CGenericData()
   int nTagsPositive = tagsToUse.size();
   
   // Read remaining node features
-  FILE* nf = fopen(nodeFile.c_str(), "r"); // nodeFile = data/trainingIndicatorsPASCAL.txt
+  // nodeFile = data/trainingIndicatorsPASCAL.txt, 这个文件对应于nodeFeaturesXXX.txt文件
+  FILE* nf = fopen(nodeFile.c_str(), "r");
   // nodeFile这个文件， 第一行存放总体信息， groups, tags, labels的数目
   fscanf(nf, "%d %d %d", &NGroups, &NTags, &NLabels); // NGroups=6041 NTags=20000 NLabels=215
   // 从第二行开始， 先存完groups, 然后tags， 最后labels
@@ -211,7 +215,7 @@ CGenericData::CGenericData()
     labelNames[id] = string(name);
     delete [] name;
   }
-  // 前面三个参数ngroups, ntags, nlabels读取完以后，紧接着一行是8151，为nphotos的个数
+  // 前面三个参数ngroups, ntags, nlabels读取完以后，紧接着一行(第6041+20000+215+1行)是8151，为nphotos的个数
   fscanf(nf, "%d", &NPhotos);
   
   NGroups_ = groupsToUse.size();
@@ -277,9 +281,9 @@ CGenericData::CGenericData()
       }
     }
 
-    nodeFeatures[i] = feature;
-    nodeLabels[i] = NEGATIVE;
-    if (indicator[learnLabel] == '1') nodeLabels[i] = POSITIVE;
+    nodeFeatures[i] = feature; // 每一个photo的nodeFeatures的维度是[nImageFeatures+NGroups_+NTags_+NWords_+NOthers]
+    nodeLabels[i] = NEGATIVE; // nodeLabel大小是[NPhotos], 初始都置为-1， 如果learnLabel指定， 则置为+1
+    if (indicator[learnLabel] == '1') nodeLabels[i] = POSITIVE; //indicator大小是[NGroups+NTags+NLabels+2], 从indicator那个文件中读取的
     if (indicator[learnLabel] == '0') nodeLabels[i] = NEGATIVE;
     if (nodeLabels[i] == POSITIVE) lossPositive ++; //统计positive的个数
     if (nodeLabels[i] == NEGATIVE) lossNegative ++; //统计negative的个数
@@ -287,6 +291,7 @@ CGenericData::CGenericData()
     delete [] userId;
     delete [] indicator;
   }
+  printf("For learnLabel: %d, num of positive: %f, negative: %f \n", learnLabel, lossPositive, lossNegative);
   fclose(nf);
 
   if (config.GetBool("Data.useNodeFeatures")) // useNodeFeatures=true
@@ -296,7 +301,7 @@ CGenericData::CGenericData()
     int NWords;
     // 文件第一行是统计words的综述NWords=14227
     fscanf(tf, "%d", &NWords);
-    // 之后逐行读取 wordID:word的格式
+    // 之后逐行读取 wordID:word的格式, 比如6 shot, 注意这里读取的wordID:word根本没有使用！
     for (int i = 0; i < NWords; i ++)
     {
       int wordID;
@@ -305,6 +310,7 @@ CGenericData::CGenericData()
       delete [] word;
     }
     // 上面word读取完以后， 接下来是photos的存储， 开始一行(14229行)格式为8151111604571 52734910@N00 3 ...
+    // 这里对应了每个photo和userid的间的关系， 每个wordid出现的次数
     for (int i = 0; i < NPhotos; i ++)
     {
       long photoId = 0;
@@ -520,7 +526,7 @@ CGenericData::CGenericData()
   }
   
   firstOrderResponses = NULL;
-  // useSocialFeatures=true 没firstOrderModel
+  // useSocialFeatures=true 没firstOrderModel, 以下未执行
   if (config.GetBool("Data.useSocialFeatures") and config.IsSet("Data.firstOrderModel"))
   {
     firstOrderResponses = new map<int, double>();

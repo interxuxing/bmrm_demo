@@ -334,30 +334,50 @@ double AvP(pair<int,double>* confidences_, map<int,int> gt_)
 
 void CGenericLoss::Evaluate(CModel *model)
 {
-  TheMatrix &w = _model->GetW(); 
-  double* dat = w.Data();
+	  TheMatrix &w = _model->GetW();
+	  double* dat = w.Data();
 
-  Configuration &config = Configuration::GetInstance();
-  string outFile = config.GetString("Data.labelOutput");
-  FILE* f = fopen(outFile.c_str(), "w");
+	  Configuration &config = Configuration::GetInstance();
+	  string outFile = config.GetString("Data.labelOutput");
 
-  {
-    map<int,int> ybar;
-    pair<int,double>* confidences = new pair<int,double> [data->nodeFeatures.size()];
-    minimize(data->nodeFeatures, &(data->nodeLabels), data->edgeFeatures, dat, dat + data->nNodeFeatures, ybar, data->nNodeFeatures, data->nEdgeFeatures, data->lossPositive, data->lossNegative, data->indexEdge, confidences, 0, data->firstOrderResponses);
+	  FILE* f = fopen(outFile.c_str(), "w");
 
-    printf("0/1 loss    = %f\n", LabelLoss(data->nodeLabels, ybar, data->lossPositive, data->lossNegative, ZEROONE));
-    printf("scaled loss = %f\n", LabelLoss(data->nodeLabels, ybar, data->lossPositive, data->lossNegative, SCALED));
-    printf("AvP = %f\n", AvP(confidences, data->nodeLabels));
-    printf("loss = %f\n", LabelLoss(data->nodeLabels, ybar, data->lossPositive, data->lossNegative, LOSS));
-    delete [] confidences;
+	  // 将预测的值confidences和gt一起写入一个文件，用于更详细的对比。
+	  	  string predFile = config.GetString("Data.predOutput");
+	  	  FILE* f_pred = fopen(predFile.c_str(), "w");
 
-    for (map<int,int>::iterator it = ybar.begin(); it != ybar.end(); it ++)
-      if (it->second == 1)
-        fprintf(f, "%ld\n", data->indexNode[it->first]);
-  }
-  
-  fclose(f);
+	  {
+	    map<int,int> ybar;
+	    pair<int,double>* confidences = new pair<int,double> [data->nodeFeatures.size()];
+	    minimize(data->nodeFeatures, &(data->nodeLabels), data->edgeFeatures, dat, dat + data->nNodeFeatures, ybar, data->nNodeFeatures, data->nEdgeFeatures, data->lossPositive, data->lossNegative, data->indexEdge, confidences, 0, data->firstOrderResponses);
+
+	    printf("0/1 loss    = %f\n", LabelLoss(data->nodeLabels, ybar, data->lossPositive, data->lossNegative, ZEROONE));
+	    printf("scaled loss = %f\n", LabelLoss(data->nodeLabels, ybar, data->lossPositive, data->lossNegative, SCALED));
+	    printf("AvP = %f\n", AvP(confidences, data->nodeLabels));
+	    printf("loss = %f\n", LabelLoss(data->nodeLabels, ybar, data->lossPositive, data->lossNegative, LOSS));
+	    delete [] confidences;
+
+	    for (map<int,int>::iterator it = ybar.begin(); it != ybar.end(); it ++)
+	      if (it->second == 1)
+	        fprintf(f, "%ld\n", data->indexNode[it->first]);
+
+		  double pred_value = 0;
+		  int gt_value = 0;
+		  for (int i = 0; i < (int) data->nodeLabels.size(); i ++)
+		  {
+			if (data->nodeLabels[i] == POSITIVE or data->nodeLabels[i] == NEGATIVE)
+			{
+			  gt_value = data->nodeLabels[i];
+			  pred_value = confidences[i].second;
+			  fprintf(f_pred, "%d %f\n", gt_value, pred_value);
+			}
+		  }
+
+
+	  }
+
+	  fclose(f);
+	  fclose(f_pred);
 }
 
 double CGenericLoss::LabelLoss(map<int,int>& y, map<int,int>& ybar, double lossPositive, double lossNegative, losstype lt)

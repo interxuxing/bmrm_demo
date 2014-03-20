@@ -4,7 +4,7 @@ __author__ = 'LIMU'
 """
 import hashlib
 
-import flickrapi
+# import flickrapi
 try:
     import xml.etree.cElementTree as etree
 except ImportError:
@@ -47,6 +47,8 @@ def sign(dictionary):
 
         data.append(datum)
 
+    # data.append('methodflickr.auth.getFrob')
+    # data.append('flickr.auth.getToken')
     md5_hash = hashlib.md5()
 
     md5_hash.update("".join(data))
@@ -55,10 +57,35 @@ def sign(dictionary):
 
 
 if __name__ == '__main__':
+    # step-1, get frop value
+    # method = 'flickr.auth.getFrob'
+    # dictionary = {'api_key':API_KEY, 'method':method}
+    # arg_sig = sign(dictionary)
+    #
+    # http_request = 'http://flickr.com/services/rest/?api_key=%s&method=%s&api_sig=%s' % \
+    #                (API_KEY, method, arg_sig)
+    # print http_request
 
-    dictionary = {'api_key':API_KEY, 'perm':'write'}
-    arg_sig = sign(dictionary)
-    print arg_sig
+    # step-2, get athorizate page
+    # frob = '72157642592842773-fcd076017ae8d0cd-458342'
+    # method = 'flickr.auth.getToken'
+    # dictionary = {'api_key':API_KEY, 'frob':frob, 'perms':'write'}
+    # api_sig = sign(dictionary)
+    #
+    # http_request = 'http://flickr.com/services/auth/?api_key=%s&perms=write&frob=%s&api_sig=%s' % \
+    #                (API_KEY, frob, api_sig)
+    # print http_request
+
+
+    # step-3, use getToken method to get token
+    frob = '72157642593965443-44a1012e976c9f22-458342'
+    method = 'flickr.auth.getToken'
+    dictionary = {'api_key':API_KEY, 'frob':frob, 'method':method}
+    api_sig = sign(dictionary)
+    http_request = 'http://flickr.com/services/rest/?method=%s&api_key=%s&frob=%s&api_sig=%s' % \
+                   (method, API_KEY, frob, api_sig)
+
+    print http_request
 
     # photo_usr_id = '72511036@N00'
     #

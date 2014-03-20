@@ -20,11 +20,14 @@ import flickr
 
 def set_from_tags(tags, title, description, all=True):
     """all=True means include non-public photos"""
-    # user = flickr.test_login()
+    user = flickr.test_login()
     photos = flickr.photos_search(user_id=user.id, auth=all, tags=tags)
-    set = flickr.Photoset.create(photos[0], title, description)
-    set.editPhotos(photos)
-    return set
+    if len(photos) != 0:
+        set = flickr.Photoset.create(photos[0], title, description)
+        set.editPhotos(photos)
+        return set
+    else:
+        return None
 
 def main(*argv):
     from getopt import getopt, GetoptError

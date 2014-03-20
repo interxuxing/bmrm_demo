@@ -39,7 +39,7 @@ API_KEY = '1c9a5bdda3c868dbcc1aa36cc32d0296'
 API_SECRET = '1ae2da39604d942d'
 email = None
 password = None
-AUTH = False
+AUTH = True
 debug = False
 
 # The next 2 variables are only importatnt if authentication is used

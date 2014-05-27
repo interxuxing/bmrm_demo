@@ -1,0 +1,4 @@
+Due to the size of the datasets used in this paper they are not included in this download. Please contact me to discuss obtaining this data if you require it (julian.mcauley@gmail.com). Naturally this code cannot be executed without the data, though hopefully some of the routines are useful anyway.
+
+The source files included in this folder can be used with the BMRM library (http://users.cecs.anu.edu.au/~chteo/BMRM.html). The bash script will then call this library to perform latent-variable structured learning.
+
